@@ -4,13 +4,15 @@
 #include "stdafx.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SIZE_640x480 307200
 #define SIZE_352x352 123904
 #define SIZE_416x416 173056
 #define SKIP_LINES	 50
+#define X_OFFSET	 40 // This parameter will remove the bios distance of Front and IR Cam.
 
-FILE *pFile1, *pFile2; // File1 = front, File2 = IR
+FILE *pFile1, *pFile2, *pFile3; // File1 = front, File2 = IR
 long lSize1, lSize2;
 char *buffer1, *buffer2;
 size_t result;
@@ -22,6 +24,10 @@ unsigned int pixel_value;
 int valid_count = 0;
 int skip_pixels;
 bool front_block_found = 0, ir_block_found = 0;
+int criteria_x, criteria_y;
+char log_buf[250] = { 0 };
+bool check_result;
+int version = 20170927;
 
 int main(int argc, char *argv[])
 {
@@ -32,11 +38,16 @@ int main(int argc, char *argv[])
 	}
 	file1_str = argv[1];
 	file2_str = argv[2];
+	criteria_x = atoi(argv[3]);
+	criteria_y = atoi(argv[4]);
 	printf("file1=%s, file2=%s\n", file1_str, file2_str);
 	fopen_s(&pFile1, file1_str, "rb");
 	if (pFile1 == NULL) { fputs("File error1", stderr); return 1; }
 	fopen_s(&pFile2, file2_str, "rb");
 	if (pFile2 == NULL) { fputs("File error2", stderr); return 1; }
+	// File open for result
+	fopen_s(&pFile3, "result_tilt.txt", "w+");
+	if (pFile1 == NULL) { fputs("File Result", stderr); return 1; }
 
 
 	// obtain file size:
@@ -164,7 +175,23 @@ int main(int argc, char *argv[])
 	printf("IR to center Distance = [%d, %d]\n", ir_diff_x, ir_diff_y);
 
 	// If diff of front or ir is larger than criteria, then fail
+	printf("Total Distance: RGB-IR = [%d, %d]. Criteria=[%d, %d] \n", front_diff_x- ir_diff_x - X_OFFSET, front_diff_y- ir_diff_y, criteria_x, criteria_y);
+	if (abs(front_diff_x - ir_diff_x - X_OFFSET) < criteria_x && abs(front_diff_y - ir_diff_y) < criteria_y)
+	{
+		printf("Result: PASS\n");
+		check_result = 1;
+	}
+	else
+	{
+		printf("Result: FAIL\n");
+		check_result = 0;
+	}
 
+
+	sprintf_s(log_buf, "%s \nTotal Distance: RGB-IR = [%d, %d]. Criteria=[%d, %d] \nVersion = %d", check_result? "PASS":"FAIL", front_diff_x - ir_diff_x - X_OFFSET, front_diff_y - ir_diff_y, criteria_x, criteria_y, version);
+	//sprintf_s(log_buf, "%s",  (char *) VERSION);
+	fwrite(log_buf, 1, sizeof(log_buf), pFile3);
+	fclose(pFile3);
 
 	free(buffer1);
 	free(buffer2);
