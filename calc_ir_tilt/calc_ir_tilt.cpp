@@ -108,18 +108,18 @@ int main(int argc, char *argv[])
 	valid_count = 0;
 	for (int i= skip_pixels; i<lSize1 - skip_pixels; i++)
 	{
-		pixel_value = (int) *(buffer1 + i);
-		if (pixel_value < 10) // Criteria is below 10
+		pixel_value = (unsigned char) *(buffer1 + i);
+		if (pixel_value >= 254) // Criteria is below 10
 		{
 			valid_count++;
-			//printf("%x\n", (int) *(buffer1 + i));
+			printf("%x\n", pixel_value);
 		}
 		else
 		{
 			if (valid_count > 0) // Should continue 5 pixel to be highter than criteria
 				valid_count--;
 		}
-		if (valid_count > 5) // The block is found. Break
+		if (valid_count > 10) // The block is found. Break
 		{
 			front_block_y = i / front_width;
 			front_block_x = i % front_width;
@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
 	valid_count = 0;
 	for (int i = skip_pixels; i<lSize2 - skip_pixels; i++)
 	{
-		pixel_value = (int) *(buffer2 + i);
-		if (pixel_value < 10) // Criteria is below 10
+		pixel_value = (unsigned char) *(buffer2 + i);
+		if (pixel_value >= 254) // Criteria is below 10
 		{
 			valid_count++;
 			//printf("%x\n", (int) *(buffer2 + i));
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 			if (valid_count > 0) // Should continue 5 pixel to be highter than criteria
 				valid_count--;
 		}
-		if (valid_count > 5) // The block is found. Break
+		if (valid_count > 10) // The block is found. Break
 		{
 			ir_block_y = i / ir_width;
 			ir_block_x = i % ir_width;
